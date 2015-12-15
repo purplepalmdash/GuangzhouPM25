@@ -34,7 +34,7 @@ DELAY = 15  # secs
 URL = 'http://210.72.1.216:8080/gzaqi_new/DataList2.html?EPNAME=%E6%B5%B7%E7%8F%A0%E6%B9%96'
 CITY = 'guangzhou'
 
-# For sending message to graphite server. 
+# Sending message to graphite server. 
 def send_msg(message):
   print 'sending message:\n%s' % message
   sock = socket.socket()
@@ -42,7 +42,7 @@ def send_msg(message):
   sock.sendall(message)
   sock.close()
 
-# For fetching data, runs each hour. 
+# Fetching data, runs each hour. 
 def get_air_data():
   # Calling selenium, need linux X
   with closing(Firefox()) as browser:
@@ -51,8 +51,16 @@ def get_air_data():
   # Cooking soup. 
   soup = BeautifulSoup(page_source, 'html.parser')
   table = soup.find('table', {'class': 'headTable'})
-
-   
+  # Return array contains all of the data
+  data = []
+  for td in table.tbody.tr:
+    data.append(td.contents[0])
+  return data
+  
+if __name__ == '__main__':
+  airdata = get_air_data()
+  for i in airdata:
+    print i   
 
 # def get_loadavgs():
 #     with open('/proc/loadavg') as f:
