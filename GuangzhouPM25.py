@@ -66,6 +66,8 @@ def get_air_data(positionsets):
   hourdata = {}
   # Calling selenium, need linux X
   browser = Firefox()
+  # Added 10 seconds for waiting page for loading.
+  time.delay(10)
   browser.get(URL)
   # Click button one-by-one
   for position in positionsets:
