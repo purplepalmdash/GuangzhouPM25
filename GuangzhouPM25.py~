@@ -66,8 +66,9 @@ def get_air_data(positionsets):
   hourdata = {}
   # Calling selenium, need linux X
   browser = Firefox()
-  time.delay(10)
   browser.get(URL)
+  # Added 10 seconds for waiting page for loading.
+  time.sleep(10)
   # Click button one-by-one
   for position in positionsets:
     # After clicking, should re-get the page_source.
@@ -77,33 +78,37 @@ def get_air_data(positionsets):
     soup = BeautifulSoup(page_source, 'html.parser')
     # pm2.5 value would be something like xx 微克/立方米, so we need an regex for
     # matching, example: print int(pattern.match(input).group())
-    PM25 = int(pattern.match(soup.find('td',{'id': 'pmtow'}).contents[0]).group())
-    PM25_iaqi = int(pattern.match(soup.find('td',{'id': 'pmtow_iaqi'}).contents[0]).group())
-    PM10 = int(pattern.match(soup.find('td',{'id': 'pmten'}).contents[0]).group())
-    PM10_iaqi = int(pattern.match(soup.find('td',{'id': 'pmten_iaqi'}).contents[0]).group())
-    SO2 = int(pattern.match(soup.find('td',{'id': 'sotwo'}).contents[0]).group())
-    SO2_iaqi = int(pattern.match(soup.find('td',{'id': 'sotwo_iaqi'}).contents[0]).group())
-    NO2 = int(pattern.match(soup.find('td',{'id': 'notwo'}).contents[0]).group())
-    NO2_iaqi = int(pattern.match(soup.find('td',{'id': 'notwo_iaqi'}).contents[0]).group())
-    # Special notice the CO would be float value
-    CO = float(floatpattern.match(soup.find('td',{'id': 'co'}).contents[0]).group())
-    CO_iaqi = int(pattern.match(soup.find('td',{'id': 'co_iaqi'}).contents[0]).group())
-    O3 = int(pattern.match(soup.find('td',{'id': 'othree'}).contents[0]).group())
-    O3_iaqi = int(pattern.match(soup.find('td',{'id': 'othree_iaqi'}).contents[0]).group())
-    hourdata_key = pinyin.get(position)
-    hourdata[hourdata_key] = []
-    hourdata[hourdata_key].append(PM25)
-    hourdata[hourdata_key].append(PM25_iaqi)
-    hourdata[hourdata_key].append(PM10)
-    hourdata[hourdata_key].append(PM10_iaqi)
-    hourdata[hourdata_key].append(SO2)
-    hourdata[hourdata_key].append(SO2_iaqi)
-    hourdata[hourdata_key].append(NO2)
-    hourdata[hourdata_key].append(NO2_iaqi)
-    hourdata[hourdata_key].append(CO)
-    hourdata[hourdata_key].append(CO_iaqi)
-    hourdata[hourdata_key].append(O3)
-    hourdata[hourdata_key].append(O3_iaqi)
+    try:
+      PM25 = int(pattern.match(soup.find('td',{'id': 'pmtow'}).contents[0]).group())
+      PM25_iaqi = int(pattern.match(soup.find('td',{'id': 'pmtow_iaqi'}).contents[0]).group())
+      PM10 = int(pattern.match(soup.find('td',{'id': 'pmten'}).contents[0]).group())
+      PM10_iaqi = int(pattern.match(soup.find('td',{'id': 'pmten_iaqi'}).contents[0]).group())
+      SO2 = int(pattern.match(soup.find('td',{'id': 'sotwo'}).contents[0]).group())
+      SO2_iaqi = int(pattern.match(soup.find('td',{'id': 'sotwo_iaqi'}).contents[0]).group())
+      NO2 = int(pattern.match(soup.find('td',{'id': 'notwo'}).contents[0]).group())
+      NO2_iaqi = int(pattern.match(soup.find('td',{'id': 'notwo_iaqi'}).contents[0]).group())
+      # Special notice the CO would be float value
+      CO = float(floatpattern.match(soup.find('td',{'id': 'co'}).contents[0]).group())
+      CO_iaqi = int(pattern.match(soup.find('td',{'id': 'co_iaqi'}).contents[0]).group())
+      O3 = int(pattern.match(soup.find('td',{'id': 'othree'}).contents[0]).group())
+      O3_iaqi = int(pattern.match(soup.find('td',{'id': 'othree_iaqi'}).contents[0]).group())
+      hourdata_key = pinyin.get(position)
+      hourdata[hourdata_key] = []
+      hourdata[hourdata_key].append(PM25)
+      hourdata[hourdata_key].append(PM25_iaqi)
+      hourdata[hourdata_key].append(PM10)
+      hourdata[hourdata_key].append(PM10_iaqi)
+      hourdata[hourdata_key].append(SO2)
+      hourdata[hourdata_key].append(SO2_iaqi)
+      hourdata[hourdata_key].append(NO2)
+      hourdata[hourdata_key].append(NO2_iaqi)
+      hourdata[hourdata_key].append(CO)
+      hourdata[hourdata_key].append(CO_iaqi)
+      hourdata[hourdata_key].append(O3)
+      hourdata[hourdata_key].append(O3_iaqi)
+    except ValueError, Argument:
+      # won't add the data, simply ignore this position
+      print "The argument does not contain numbers\n", Argument
   # After clicking all of the button, quit the firefox and return the dictionary
   browser.close()
   return hourdata
