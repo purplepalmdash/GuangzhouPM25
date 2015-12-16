@@ -39,25 +39,7 @@ URL = 'http://210.72.1.216:8080/gzaqi_new/RealTimeDate.html'
 CITY = 'guangzhou'
 
 # All Points In Guangzhou City
-#"天河龙洞"
-#"白云山"
-#"麓湖"
-#"公园前"
-#"荔湾西村"
-#"黄沙路边站"
-#"杨箕路边站"
-#"荔湾芳村"
-#"海珠宝岗"
-#"海珠沙园"
-#"海珠湖"
-#"大夫山"
-#"奥体中心"
-#"萝岗西区"
-#"黄埔文冲"
-#"黄埔大沙地"
-#"亚运城"
-#"体育西"
-#"海珠赤沙"
+positionsets = ["天河龙洞", "白云山", "麓湖", "公园前", "荔湾西村", "黄沙路边站", "杨箕路边站", "荔湾芳村", "海珠宝岗", "海珠沙园", "海珠湖", "大夫山", "奥体中心", "萝岗西区", "黄埔文冲", "黄埔大沙地", "亚运城", "体育西", "海珠赤沙"]
 
 # regex for matching the digits.
 pattern = re.compile(r'\d*')
@@ -71,17 +53,17 @@ def send_msg(message):
   sock.sendall(message)
   sock.close()
 
-# Fetching data, runs each hour. 
-def get_air_data():
+# Fetching data, runs each hour. In one-time access should fetch all of the data. 
+def get_air_data(position):
   # Calling selenium, need linux X
   with closing(Firefox()) as browser:
     browser.get(URL)
     # Now you click corresponding button for get the page refreshed.
-    browser.find_element_by_id("白云山").click()
+    print position
+    browser.find_element_by_id(position).click()
     page_source = browser.page_source
   # Cooking soup. 
   soup = BeautifulSoup(page_source, 'html.parser')
-  print soup.find('td', {'id': 'othreeA_iaqi'}).contents[0]
   # pm2.5 value would be something like xx 微克/立方米, so we need an regex for
   # matching, example: print int(pattern.match(input).group())
   PM25 = int(pattern.match(soup.find('td',{'id': 'pmtow'}).contents[0]).group())
@@ -115,6 +97,27 @@ def get_air_data():
   return data
   
 if __name__ == '__main__':
-  airdata = get_air_data()
+  airdata = get_air_data("白云山")
+  timestamp = int(time.time())
+  # Construct the lines for inserting into the graphite 
+  # example: air.city.citypoint.so2
+  lines = [
+    'air.guangzhou.%s.pm25 %s %d' % ("baiyunmountain", airdata[0], timestamp),
+    'air.guangzhou.%s.pm25_iaqi %s %d' % ("baiyunmountain", airdata[1], timestamp),
+    'air.guangzhou.%s.pm10 %s %d' % ("baiyunmountain", airdata[2], timestamp),
+    'air.guangzhou.%s.pm10_iaqi %s %d' % ("baiyunmountain", airdata[3], timestamp),
+    'air.guangzhou.%s.so2 %s %d' % ("baiyunmountain", airdata[4], timestamp),
+    'air.guangzhou.%s.so2_iaqi %s %d' % ("baiyunmountain", airdata[5], timestamp),
+    'air.guangzhou.%s.no2 %s %d' % ("baiyunmountain", airdata[6], timestamp),
+    'air.guangzhou.%s.no2_iaqi %s %d' % ("baiyunmountain", airdata[7], timestamp),
+    'air.guangzhou.%s.co %s %d' % ("baiyunmountain", airdata[8], timestamp),
+    'air.guangzhou.%s.co_iaqi %s %d' % ("baiyunmountain", airdata[9], timestamp),
+    'air.guangzhou.%s.o3 %s %d' % ("baiyunmountain", airdata[10], timestamp),
+    'air.guangzhou.%s.o3_iaqi %s %d' % ("baiyunmountain", airdata[11], timestamp)
+  ]
+  message = '\n'.join(lines) + '\n'
+  print "######\n"
+  print message
+  print "######\n"
   for i in airdata:
     print i
